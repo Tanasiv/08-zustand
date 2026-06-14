@@ -62,7 +62,11 @@ export default function NoteForm({ onClose }: Props) {
       <button
         type="button"
         onClick={() => {
-          onClose?.();
+          if (onClose) {
+            onClose();
+          } else {
+            router.back();
+          }
         }}
       >
         Cancel

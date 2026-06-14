@@ -16,9 +16,13 @@ export default function NotesClient({ tag }: { tag: string }) {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
 
+  // debounce search
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(search), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => {
+      setDebounced(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [search]);
 
   const { data } = useQuery({
@@ -26,26 +30,28 @@ export default function NotesClient({ tag }: { tag: string }) {
     queryFn: () => fetchNotes(page, debounced, tag),
   });
 
+  const notes = data?.notes ?? [];
+
   return (
     <div className={css.container}>
       <SearchBox
-  value={search}
-  onSearch={(v) => {
-    setSearch(v);
-    setPage(1);
-  }}
-/>
+        value={search}
+        onSearch={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+      />
 
       <Link href="/notes/action/create">
         <button>Create note +</button>
       </Link>
 
-      <NoteList notes={data?.notes ?? []} />
+      {notes.length > 0 && <NoteList notes={notes} />}
 
       <Pagination
         currentPage={page}
         pageCount={data?.totalPages ?? 1}
-        onPageChange={setPage}
+        onPageChange={(p) => setPage(p)}
       />
     </div>
   );
