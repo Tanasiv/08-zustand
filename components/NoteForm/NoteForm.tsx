@@ -1,94 +1,72 @@
-import '../NoteForm/NoteForm.module.css';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createNote } from '../../lib/api';
-import type { NoteTag } from '../../types/note';
+"use client";
 
-interface NoteFormProps {
-  onClose: () => void;
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { useNoteStore } from "@/lib/store/noteStore";
+
+interface Props {
+  onClose?: () => void;
 }
 
-interface FormValues {
-  title: string;
-  content: string;
-  tag: NoteTag;
-}
-
-const validationSchema = Yup.object({
-  title: Yup.string()
-    .min(3, 'Min 3 chars')
-    .max(50, 'Max 50 chars')
-    .required('Required'),
-  content: Yup.string().max(500, 'Max 500 chars'),
-  tag: Yup.string()
-    .oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'])
-    .required('Required'),
-});
-
-export default function NoteForm({ onClose }: NoteFormProps) {
+export default function NoteForm({ onClose }: Props) {
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const { draft, setDraft, clearDraft } = useNoteStore();
 
   const mutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      onClose();
+      clearDraft();
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      router.push("/notes/filter/all");
     },
   });
 
-  const initialValues: FormValues = {
-    title: '',
-    content: '',
-    tag: 'Todo',
+  const handleChange = (field: string, value: string) => {
+    setDraft({ [field]: value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(draft);
   };
 
   return (
-    <Formik<FormValues>
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={(values, actions) => {
-        mutation.mutate(values); 
-        actions.resetForm();
-      }}
-    >
-      {({ isSubmitting }) => (
-        <Form>
-          <div>
-            <label>Title</label>
-            <Field name="title" type="text" />
-            <ErrorMessage name="title" component="span" />
-          </div>
+    <form onSubmit={handleSubmit}>
+      <input
+        value={draft.title}
+        onChange={(e) => handleChange("title", e.target.value)}
+        placeholder="Title"
+      />
 
-          <div>
-            <label>Content</label>
-            <Field name="content" as="textarea" rows={5} />
-            <ErrorMessage name="content" component="span" />
-          </div>
+      <textarea
+        value={draft.content}
+        onChange={(e) => handleChange("content", e.target.value)}
+        placeholder="Content"
+      />
 
-          <div>
-            <label>Tag</label>
-            <Field name="tag" as="select">
-              <option value="Todo">Todo</option>
-              <option value="Work">Work</option>
-              <option value="Personal">Personal</option>
-              <option value="Meeting">Meeting</option>
-              <option value="Shopping">Shopping</option>
-            </Field>
-            <ErrorMessage name="tag" component="span" />
-          </div>
+      <select
+        value={draft.tag}
+        onChange={(e) => handleChange("tag", e.target.value)}
+      >
+        <option value="Todo">Todo</option>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+        <option value="Meeting">Meeting</option>
+        <option value="Shopping">Shopping</option>
+      </select>
 
-          <div>
-            <button type="button" onClick={onClose}>
-              Cancel
-            </button>
+      <button type="submit">Create</button>
 
-            <button type="submit" disabled={isSubmitting}>
-              Create note
-            </button>
-          </div>
-        </Form>
-      )}
-    </Formik>
+      <button
+        type="button"
+        onClick={() => {
+          onClose?.();
+        }}
+      >
+        Cancel
+      </button>
+    </form>
   );
 }

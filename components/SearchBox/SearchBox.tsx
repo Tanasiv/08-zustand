@@ -1,4 +1,6 @@
-import '../SearchBox/SearchBox.module.css';
+"use client";
+
+import styles from "./SearchBox.module.css";
 
 interface SearchBoxProps {
   value: string;
@@ -11,6 +13,7 @@ export default function SearchBox({
 }: SearchBoxProps) {
   return (
     <input
+      className={styles.input}
       type="text"
       value={value}
       placeholder="Search notes"
