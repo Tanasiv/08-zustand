@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
-import Providers from "./providers";
+import Providers from "@/components/TanStackProvider/TanStackProvider";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={roboto.className}>
+      <body className={roboto.variable}>
         <Providers>{children}</Providers>
       </body>
     </html>
